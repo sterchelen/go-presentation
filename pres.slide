@@ -1,0 +1,237 @@
+Go language
+Introduction to a cool world
+23 Apr 2019
+Tags: go, cool, simple 
+
+Sterchele Nicolas
+Engineer, AntVoice
+nicolass@antvoice.com
+
+* Hello, world
+.play hello_world.go
+
+
+
+* Why Go ?
+
+
+* 
+
+- We must go fast ! 
+- Programming must be fun *AGAIN* !
+
+A response to Google's needs:
+
+- efficient large scale programming
+- speed of compilation
+- mutlicore and network...
+
+And a reaction to speed/safety or ease of use
+
+- complexity, weight, noise (C++, .NET, Java)
+- no static checking (Javascript, Python)
+
+* What is Go ?
+
+* 
+
+Go is simple.
+
+Go supports a limited set of very well understood language features rather than trying to support everything.
+
+Go is a modern, general purpose language. Syntactically similar to C but with memory safety.
+
+
+The efficiency of a statically-typed compiled language with the ease of programming of a dynamic language.
+
+* 
+
+- Compiles to native machine code (32-bit; 64-bit ; ARM) / (Unix-like ; Windaube).
+- Statically typed.
+- Lightweight syntax (25 keywords vs 104 for C#).
+- Simple type system.
+- Gargabe collected.
+- High-performance networking and multiprocessing thanks to concurrency primitives.
+- High-speed compilation.
+- Explicit dependencies to enable faster builds.
+
+* 
+
+.image images/compiling.png
+
+* What is not Go ?
+
+* 
+- No classes
+- No constructors
+- No inheritance
+- No exceptions
+- No annotations
+- No user-defined generics
+
+
+* Genesis
+
+* 
+Robert Griesemer, Ken Thompson, and Rob Pike started the project in late 2007 as a 20% Google project, primarily motivated by their shared dislike of C++. 
+
+- Open to the world in November 2009. 
+- Version 1.0 was release in March 2012. It guarantees compatibility for the language spec and major parts of the standard library. All versions up to the current Go 1.12 have maintained this promise.
+- Version 2.0 draft and discussion started in 13 July 2017.
+
+"Consensus drove the design. Nothing went into the language until [Ken Thompson, Robert Griesemer, and myself] all agreed that it was right. Some features didn’t get resolved until after a year or more of discussion."
+_Rob_ _Pike_
+
+* 
+.image images/background-go.png 288 800
+
+
+* Go Tour
+
+* Go dependency model
+
+* 
+Compilation speed depends on managing dependencies.
+
+Explicit dependencies in source allow:
+- fast compilation
+- fast linking
+
+The first step to making Go scale, is that the _language_ defines that unused dependencies are a compile-time error. This guarantees by construction that the dependency tree is precise, that is has no extraneous edges. No extra code compiled... Minimizes compilation time.
+
+If *A.go* depends on *B.go* depends on *C.go*:
+- compile *C.go,* *B.go*, then *A.go*.
+- to compile *A.go*, compiler reads *B.o* not *C.o*
+- only code that is used, is compiled ! This is a huge speedup.
+
+* Go packages
+
+* 
+Packages combines some of the properties of libraries, namespaces, and modules into a single construct.
+
+Every Go source file, starts with a _package_ clause, like this:
+.code package.go
+
+* Remote packages
+
+* 
+Package path, can be co-opted to refer to remote repositories by having it identify the _URL_ of the site serving the repository.
+
+Ex:
+import "github.com/prometheus/httpclient"
+var client httpclient.Conn
+
+On build, go will download the repository on your local hdd. Then compiles only what is needed not the whole library.
+ 
+* Go tools
+
+* 
+- go get -> download and install packages and dependencies.
+- go fmt -> reformat packages sources. --> Consistency on code format, easier to read. 
+- go build -> compile packages and dependencies.
+- go test -> test packages with coverage.
+- go generate -> generate Go files by processing sources. 
+- go doc -> generate documentation.
+
+* Go essence
+
+* Structs 
+Structs describe the layout of data.
+.code struct.go
+
+* Interfaces
+Simple:
+- interfaces are just sets of methods; work for any type.
+Orthogonal:
+- representation (data) and behavior (methods) are independent.
+- empty interface can represent any value.
+Succinct:
+- no implements declarations; interfaces just statisfy.
+Safe:
+- static type checking
+Expressiveness:
+- implicit satisfcation lets pieces fit together seamlessly.
+
+* 
+Go philosophy is like Unix philosophy, do one thing and do it well. So interfaces must be really thin. Composition not inheritance.
+.code interfaces.go
+_Point_ and _Vector_ satisfied _Abser_ implictly; other types might too.
+It is a form of duck typing, "If it walks like a duck and it quacks like a duck, then it must be a duck".
+
+* Visibility
+With methods not declared as part of the type definition, how to say private/public ?
+
+*IamPublic*
+*ohShitNobodyCanSeeMe*
+
+* Concurrency
+
+* 
+Go has native support for concurrent operations.
+
+In _UNIX_ we think about *processes* connected by *pipes*
+find /pstuff/go_stuff/src/ | grep _test.go$ | xargs wc -l
+
+The Go analogue: *goroutines* connected by *channels*.
+
+*Goroutines* are like threads:
+- they share memory.
+But cheaper:
+- smaller, segmented stacks.
+- many goroutines per os thread.
+
+Start a goroutine just by calling a function with the _go_ keyword:
+.code goroutine.go
+
+* 
+*Channels* are a typed conduit for:
+- synchronization.
+- communication.
+.play channels.go
+
+*  
+.play synchro.go
+
+* Concurrency philosophy
+- *Goroutines* give the efficiency of an asynchronous model in a synchronous style.
+- Easier to reason about: write goroutines that to their specific jobs well, and connect them by *channels*.
+
+"Don't communicate by sharing memory.
+Instead, share memory by communicating."
+_Rob_ _Pike_
+
+* Errors
+
+* 
+Go does not have an exception facility. There is not "try-catch-finally" blocks. Instead, we have a pre-defined interface type called _error_ that represents a value that has an _Error_ method returning a string:
+.code error.go
+Libraries use the _error_ type to return a description of the error. Combined with the ability for functions to return multiple values, it's easy to return the computed result along with an error value, if any.
+
+* 
+Go's creators say that was a deliberate choice not to incorporate exceptions in Go. Some critics disagree with this decision... But it deserves to be explain.
+
+First, there is nothing exceptional about errors in computer programs. For instance, the inability to open a file is a common issue or having an error on an http call. That do not deserve a special linguistic constructs; _if_ and _return_ are enough.
+.code error_explained.go
+
+It sure, the code can be longer, but the clarity and simplicity of such code offsets its verbosity. Explicit error checking forces the programmer to think about errors; deal with them ... Exceptions make it too easy to ignore them.
+
+* Why using Go ?
+
+- Tiny static binary -> ~ 20 Mb in a docker image... Instead of ~400 Mb for a .NET image. Useful when you must handle a traffic spike.
+- Runs directly on the hardware.
+- Learning curve ! Easy to understand... 1 week to start writing idiomatic go code.
+- Very good at writing networking applications... http server in go is a blast ! 
+- Best for writing micro-service...
+- Performance ! Performance ! 
+- Since go follows the unix philosophy, it is very easy to optimise go code with the right tool.
+
+* Who is using Go ?
+
+Docker, Kubernetes, Terraform, Dropbox, SoundCloud, MongoDB, Heroku, Uber, Dailymotion, etc.
+
+
+* Optimisation
+
+* 
+DEMO
+
